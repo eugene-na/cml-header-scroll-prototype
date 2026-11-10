@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Header Scroll Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+body{margin:0}
+/* Layout: a working phone on the left, the rule and live readout on the right. */
+:root{--bg:#f4f6f2;--panel:#ffffff;--fg:#17201a;--muted:#5d695f;--line:#d9dfd6;--accent:#2f7d4f;--accent-soft:#d8ecdf;--solid:#e9eee7;--dev:#0f1a13;--phone:#fbfcfa;--warn:#b4531a;--warn-soft:#fbe6d6;--font:'Manrope',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101712;--panel:#18211b;--fg:#e8efe9;--muted:#9eaca1;--line:#2b372e;--accent:#6fd297;--accent-soft:#1f3a2a;--solid:#2a362d;--phone:#0d130f;--warn:#f0a070;--warn-soft:#3a2a1e;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#101712;--panel:#18211b;--fg:#e8efe9;--muted:#9eaca1;--line:#2b372e;--accent:#6fd297;--accent-soft:#1f3a2a;--solid:#2a362d;--phone:#0d130f;--warn:#f0a070;--warn-soft:#3a2a1e;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);line-height:1.5;padding-block:36px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1{font-size:clamp(26px,5vw,40px);line-height:1.1;margin:0 0 10px;font-weight:800;letter-spacing:-.02em;text-wrap:balance}
+h2{font-size:18px;margin:0 0 10px;font-weight:800}
+p{margin:0}
+.tag{font:500 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.lead{color:var(--muted);font-size:17px;max-width:62ch}
+.stage{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.phone-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;flex:0 0 auto;margin-inline:auto}
+.ph{position:relative;width:300px;height:540px;border-radius:30px;border:8px solid var(--dev);background:var(--phone);overflow:hidden}
+.status{position:absolute;top:0;left:0;right:0;height:26px;z-index:6;display:flex;justify-content:space-between;align-items:center;padding:0 18px;font-size:11px;font-weight:700;pointer-events:none}
+.status em{width:24px;height:9px;border-radius:3px;background:currentColor;opacity:.7}
+.scroller{position:absolute;inset:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;padding-top:82px;padding-bottom:40px}
+.hd{position:absolute;top:26px;left:0;right:0;height:56px;z-index:5;display:flex;align-items:center;justify-content:space-between;padding:0 16px;font-size:13px;font-weight:700;background:var(--solid);transition:transform .28s ease,background-color .28s ease,backdrop-filter .28s ease}
+.hd.ovl{background:color-mix(in srgb,var(--solid) 72%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.hd.off{transform:translateY(-100%)}
+.hd .l,.hd .r{display:flex;gap:12px;align-items:center}
+.it{opacity:.7}.it.on{opacity:1;border-bottom:2px solid currentColor;padding-bottom:1px}
+.ic{width:18px;height:18px;border-radius:50%;border:2px solid currentColor;display:block}
+.blk{margin:0 14px 12px;border-radius:12px;background:var(--solid);padding:14px;font-size:13px;color:var(--muted)}
+.blk b{display:block;color:var(--fg);font-size:14px;margin-bottom:2px}
+.blk.big{height:120px}
+.mark{position:relative;height:0;margin:0 0 12px}
+.mark::before{content:"";position:absolute;left:0;right:0;border-top:2px dashed var(--warn)}
+.mark span{position:absolute;right:14px;top:-22px;font:500 10px var(--mono);color:var(--warn);background:var(--phone);padding:1px 6px;border-radius:6px}
+.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+button{font:700 14px var(--font);padding:10px 16px;border-radius:10px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer}
+button.alt{background:transparent;color:var(--accent)}
+button:focus-visible{outline:3px solid var(--accent-soft);outline-offset:2px}
+.hint{font-size:13px;color:var(--muted);text-align:center;max-width:300px}
+.side{flex:1 1 320px;min-width:0;display:flex;flex-direction:column;gap:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.steps li{display:grid;grid-template-columns:30px 1fr;gap:10px;padding:12px;border-radius:12px;border:1px solid var(--line);transition:background-color .2s,border-color .2s}
+.steps li.on{background:var(--accent-soft);border-color:var(--accent)}
+.steps .n{width:26px;height:26px;border-radius:50%;background:var(--solid);display:grid;place-items:center;font:700 13px var(--mono)}
+.steps li.on .n{background:var(--accent);color:#fff}
+.steps b{display:block;font-size:15px}
+.steps span{font-size:14px;color:var(--muted)}
+.read{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.read div{background:var(--solid);border-radius:10px;padding:10px 12px}
+.read dt{font:500 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.read dd{margin:2px 0 0;font:500 18px var(--mono);font-variant-numeric:tabular-nums}
+.pill{display:inline-block;font:500 13px var(--mono);padding:3px 10px;border-radius:99px}
+.pill.vis{background:var(--accent-soft);color:var(--accent)}
+.pill.hid{background:var(--warn-soft);color:var(--warn)}
+.bar{position:relative;height:14px;border-radius:7px;background:var(--solid);margin-top:12px;overflow:hidden}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--accent);width:0}
+.note{font-size:14px;color:var(--muted)}
+.cap{font-size:14px;color:var(--muted);min-height:44px}
+</style>
+</head>
+<body>
+<main>
+<div><span class="tag">cml.header_widget · Web app · Proposed</span>
+<h1>Header scroll prototype</h1>
+<p class="lead">The rule: the header slides off once the user has scrolled past the height of the header, and slides back in as soon as the user scrolls up. Scroll the phone to try it, or press Play demo.</p></div>
+
+<div class="stage">
+  <div class="phone-wrap">
+    <div class="ph" id="ph">
+      <div class="status"><b>9:41</b><em></em></div>
+      <div class="hd" id="hd"><div class="l"><span class="it on">Item</span><span class="it">Item</span><span class="it">Item</span></div><div class="r"><span class="ic"></span><span class="ic"></span></div></div>
+      <div class="scroller" id="sc">
+        <div class="mark" style="margin-top:-26px"><span>header height</span></div>
+        <div class="blk big"><b>Content 1</b>Scroll down past the dashed line. That line sits one header height from the top.</div>
+        <div class="blk"><b>Content 2</b>The header is still here until you pass the line.</div>
+        <div class="blk big"><b>Content 3</b>Past the line, the header slides off.</div>
+        <div class="blk"><b>Content 4</b>Now scroll up, even a little.</div>
+        <div class="blk big"><b>Content 5</b>The header slides back in right away.</div>
+        <div class="blk"><b>Content 6</b>It does not wait to reach the top.</div>
+        <div class="blk big"><b>Content 7</b>Keep scrolling down and it hides again.</div>
+        <div class="blk"><b>Content 8</b>Example text for illustration.</div>
+        <div class="blk big"><b>Content 9</b>Example text for illustration.</div>
+        <div class="blk"><b>Content 10</b>Example text for illustration.</div>
+      </div>
+    </div>
+    <div class="row"><button id="play">Play demo</button><button id="reset" class="alt">Reset</button></div>
+    <p class="hint" id="cap">Scroll inside the phone.</p>
+  </div>
+
+  <div class="side">
+    <div class="card"><h2>What happens</h2>
+      <ol class="steps" id="steps">
+        <li data-s="1"><span class="n">1</span><div><b>Before the line</b><span>The scroll position is less than the header height. The header stays, so nothing hides yet.</span></div></li>
+        <li data-s="2"><span class="n">2</span><div><b>Scrolling down past the line</b><span>The scroll position is past the header height and the user keeps going down. The header slides off.</span></div></li>
+        <li data-s="3"><span class="n">3</span><div><b>Scrolling up</b><span>The user scrolls up by any amount. The header slides back in right away, from any position.</span></div></li>
+      </ol>
+    </div>
+    <div class="card"><h2>Live readout</h2>
+      <dl class="read" style="margin:0">
+        <div><dt>Scroll position</dt><dd id="y">0 px</dd></div>
+        <div><dt>Header height</dt><dd>56 px</dd></div>
+        <div><dt>Direction</dt><dd id="dir">-</dd></div>
+        <div><dt>Header</dt><dd><span class="pill vis" id="state">Visible</span></dd></div>
+      </dl>
+      <div class="bar" aria-hidden="true"><i id="fill"></i></div>
+      <p class="note" style="margin-top:8px">The bar shows how far the scroll position is toward the header height. It is full once the position passes it.</p>
+    </div>
+    <div class="card"><h2>Why this standard</h2>
+      <p class="note">Hiding only after the header height keeps the header visible while the user is still near the top. Showing it on any scroll up means Back and navigation are always one small scroll away, so the user never has to return to the top to use them. This is a suggested standard. The scroll distance and whether to hide at all depend on the app experience.</p>
+    </div>
+  </div>
+</div>
+</main>
+<script>
+(function(){
+  var H = 56, sc = document.getElementById('sc'), hd = document.getElementById('hd');
+  var yEl = document.getElementById('y'), dirEl = document.getElementById('dir'), stEl = document.getElementById('state');
+  var fill = document.getElementById('fill'), cap = document.getElementById('cap');
+  var steps = document.querySelectorAll('#steps li');
+  var last = 0, hidden = false, demoTimers = [], playing = false;
+  function setStep(n){ steps.forEach(function(li){ li.classList.toggle('on', li.getAttribute('data-s') === String(n)); }); }
+  function render(y, dir){
+    yEl.textContent = Math.round(y) + ' px';
+    dirEl.textContent = dir || '-';
+    fill.style.width = Math.min(100, (y / H) * 100) + '%';
+    hd.classList.toggle('off', hidden);
+    hd.classList.toggle('ovl', y > 0 && !hidden);
+    stEl.textContent = hidden ? 'Hidden' : 'Visible';
+    stEl.className = 'pill ' + (hidden ? 'hid' : 'vis');
+  }
+  function onScroll(){
+    var y = Math.max(0, sc.scrollTop), d = y - last, dir = null;
+    if (Math.abs(d) >= 2){
+      if (d > 0){ dir = 'down'; if (y > H){ hidden = true; } setStep(y > H ? 2 : 1); }
+      else { dir = 'up'; hidden = false; setStep(3); }
+      last = y;
+    } else { dir = dirEl.textContent === '-' ? null : dirEl.textContent; }
+    if (y <= 0){ hidden = false; setStep(1); }
+    render(y, dir);
+  }
+  sc.addEventListener('scroll', onScroll, {passive:true});
+  function clearDemo(){ demoTimers.forEach(clearTimeout); demoTimers = []; playing = false; document.getElementById('play').textContent = 'Play demo'; }
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function go(t, y, text){ demoTimers.push(setTimeout(function(){ cap.textContent = text; sc.scrollTo({top:y, behavior: reduce ? 'auto' : 'smooth'}); }, t)); }
+  document.getElementById('play').addEventListener('click', function(){
+    if (playing){ clearDemo(); return; }
+    clearDemo(); playing = true; this.textContent = 'Stop demo';
+    sc.scrollTo({top:0, behavior:'auto'});
+    go(300, 40, 'Scrolling down, still before the line. The header stays.');
+    go(2300, 240, 'Past the line, still going down. The header slides off.');
+    go(4800, 170, 'Scrolling up a little. The header slides back in right away.');
+    go(7200, 420, 'Down again, past the line. It hides again.');
+    go(9800, 340, 'Up again. It comes back.');
+    go(12000, 0, 'Back at the top. The header stays.');
+    demoTimers.push(setTimeout(function(){ clearDemo(); cap.textContent = 'Demo finished. Scroll inside the phone to try it.'; }, 14200));
+  });
+  document.getElementById('reset').addEventListener('click', function(){ clearDemo(); hidden = false; sc.scrollTo({top:0, behavior:'auto'}); last = 0; cap.textContent = 'Scroll inside the phone.'; setStep(1); render(0, null); });
+  ['wheel','touchstart','keydown'].forEach(function(ev){ sc.addEventListener(ev, function(){ if (playing) clearDemo(); }, {passive:true}); });
+  setStep(1); render(0, null);
+})();
+</script>
+
+</body>
+</html>
